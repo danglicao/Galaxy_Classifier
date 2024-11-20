@@ -126,8 +126,9 @@ def build_model(num_classes):
     for name, param in model.named_parameters():
         if "heads" not in name:
             param.requires_grad = False
+    model.heads.head = nn.Linear(model.heads.head.in_features, num_classes)
     # for name, param in model.named_parameters():
-    #     if "encoder_layer_11" in name:  # 假设有12层，索引从0开始
+    #     if "encoder_layer_11" in name:
     #         param.requires_grad = True
 
     # CNN

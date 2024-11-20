@@ -25,6 +25,7 @@ torch.manual_seed(3407)
 np.random.seed(3407)
 random.seed(3407)
 
+
 def load_data(h5_file_path, batch_size, num_workers=1):
     # 打开 HDF5 文件，获取标签信息
     with h5py.File(h5_file_path, 'r') as h5_file:
@@ -45,9 +46,9 @@ def load_data(h5_file_path, batch_size, num_workers=1):
     # 定义数据变换
     train_transform = transforms.Compose([
         #resnet/vit
-        # transforms.Resize((224, 224)),
+        transforms.Resize((224, 224)),
         #convnext
-        transforms.Resize((232, 232)),
+        # transforms.Resize((232, 232)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(15),
         transforms.ToTensor(),
@@ -57,9 +58,9 @@ def load_data(h5_file_path, batch_size, num_workers=1):
 
     val_transform = transforms.Compose([
         #resnet/vit
-        # transforms.Resize((224, 224)),
+        transforms.Resize((224, 224)),
         #convnext
-        transforms.Resize((232, 232)),
+        # transforms.Resize((232, 232)),
         transforms.ToTensor(),
         transforms.Normalize(mean = [0.485, 0.456, 0.406],
                              std = [0.229, 0.224, 0.225]),
@@ -354,15 +355,17 @@ def build_model(num_classes):
 
     model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
     model.classifier[2].requires_grad = True
+    for param in model.features[3].parameters():
+        param.requires_grad = True
     return model
 
 
 def main():
     # 参数设置
-    h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/galaxies_full_set.h5'
-    batch_size = 128
-    num_workers = 1
-    num_epochs = 20
+    h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/train_data.h5'
+    batch_size = 32
+    num_workers = 4
+    num_epochs = 1000
     learning_rate = 1e-4
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -383,6 +386,44 @@ def main():
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     # 训练模型
+    model, history = train_model(
+        model,
+        train_loader,
+        val_loader,
+        criterion,
+        optimizer,
+        scheduler,
+        num_epochs,
+        device
+    )
+
+    model_save_path = 'D:/Ame508_final_data/result/new_store/galaxy_classifier.pth'
+    torch.save(model.state_dict(), model_save_path)
+    print(f"Model saved to {model_save_path}")
+
+    plot_history(history)
+    evaluate_model(model, val_loader, device)
+
+def main_with_check_point():
+    h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/train_data.h5'
+    batch_size = 32
+    num_workers = 4
+    num_epochs = 20
+    learning_rate = 1e-4
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    criterion = nn.CrossEntropyLoss()
+
+    # 加载数据
+    train_loader, val_loader, num_classes = load_data(
+        h5_file_path,
+        batch_size,
+        num_workers
+    )
+    path = 'D:/Ame508_final_data/result/new_store/checkpoint.pth'
+    optimizer = optim.AdamW(build_model(3).parameters(), lr = 1e-4)
+    scheduler = optim.lr_scheduler.StepLR(optim.AdamW(build_model(3).parameters(), lr = 1e-4), step_size=7, gamma=0.1)
+    model, optimizer, scheduler, start_epoch, history = load_checkpoint(path = path, model = build_model(3), optimizer = optimizer, scheduler = scheduler)
+
     model, history = train_model(
         model,
         train_loader,
