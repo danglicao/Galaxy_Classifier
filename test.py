@@ -43,18 +43,26 @@ class GalaxyDataset(Dataset):
         if self.h5_file is not None:
             self.h5_file.close()
 
-def load_test_data(h5_file_path, batch_size):
-    transform = transforms.Compose([
-        # resnet
-        # transforms.Resize((224, 224)),
-        #vit
-        transforms.Resize((512,512)),
-        # convnext
-        # transforms.Resize((232, 232)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
-    ])
+def load_test_data(h5_file_path, batch_size, model_name):
+    if model_name == 'vit_l_16':
+        transform = transforms.Compose([
+            # resnet
+            # transforms.Resize((224, 224)),
+            #vit
+            transforms.Resize((512,512)),
+            # convnext
+            # transforms.Resize((232, 232)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
+    else:
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
 
     test_dataset = GalaxyDataset(h5_file_path=h5_file_path, transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -103,7 +111,7 @@ def evaluate_model(model, test_loader, device, dir_path):
     plt.show()
 
 
-def build_model(num_classes, input_size=512):
+def build_model(num_classes=3, model_name=None):
     # model = models.convnext_base(weights='IMAGENET1K_V1')
     # model = models.resnet152(weights = None)
     # model = models.vit_l_16(weights = 'IMAGENET1K_SWAG_E2E_V1')
@@ -127,9 +135,28 @@ def build_model(num_classes, input_size=512):
     #         align_corners = False
     #     ).permute(0, 2, 3, 1).reshape(1, -1, pos_embedding.shape[-1])
     #     model.encoder.pos_embedding = nn.Parameter(torch.cat([cls_token, pos_tokens], dim = 1))
+    if model_name == 'convnext':
+        model = models.convnext_base(weights = 'IMAGENET1K_V1')
+        model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
+    elif model_name == 'resnet50':
+        model = models.resnet50(weights = None)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+    elif model_name == 'vit_l_16':
+        model = models.vit_l_16(weights = 'IMAGENET1K_SWAG_E2E_V1')
+        model.heads.head = nn.Linear(model.heads.head.in_features, num_classes)
+    elif model_name == 'resnet152':
+        model = models.resnet152(weights = None)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, num_classes)
+    elif model_name == 'vit_h_14':
+        model = models.vit_h_14(weights = None)
+        model.heads.head = nn.Linear(model.heads.head.in_features, num_classes)
+    else:
+        raise ValueError("Invalid model name. Please choose from 'convnext', 'resnet50', 'vit_l_16', 'resnet152', 'vit_h_14'.")
 
-    model = models.convnext_base(weights = 'IMAGENET1K_V1')
-    model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
+    return model
+
 
     return model
 
@@ -140,11 +167,12 @@ def main():
     dir_path = 'D:/Ame508_final_data/result/convnext_base'
     batch_size = 32
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model_name = 'convnext'
 
-    test_loader, num_samples = load_test_data(h5_file_path, batch_size)
+    test_loader, num_samples = load_test_data(h5_file_path, batch_size, model_name)
 
     # 构建模型并加载权重
-    model = build_model(num_classes=3)
+    model = build_model(num_classes=3, model_name = model_name)
     model.load_state_dict(torch.load(model_path))
     model.to(device)
 
