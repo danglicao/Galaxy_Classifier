@@ -408,7 +408,7 @@ def main_with_check_point():
     h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/train_data.h5'
     batch_size = 32
     num_workers = 4
-    num_epochs = 20
+    num_epochs = 1000
     learning_rate = 1e-4
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     criterion = nn.CrossEntropyLoss()
@@ -420,8 +420,8 @@ def main_with_check_point():
         num_workers
     )
     path = 'D:/Ame508_final_data/result/new_store/checkpoint.pth'
-    optimizer = optim.AdamW(build_model(3).parameters(), lr = 1e-4)
-    scheduler = optim.lr_scheduler.StepLR(optim.AdamW(build_model(3).parameters(), lr = 1e-4), step_size=7, gamma=0.1)
+    optimizer = optim.AdamW(build_model(3).parameters(), lr = learning_rate)
+    scheduler = optim.lr_scheduler.StepLR(optim.AdamW(build_model(3).parameters(), lr = learning_rate), step_size=7, gamma=0.1)
     model, optimizer, scheduler, start_epoch, history = load_checkpoint(path = path, model = build_model(3), optimizer = optimizer, scheduler = scheduler)
 
     model, history = train_model(
@@ -445,7 +445,8 @@ def main_with_check_point():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    main_with_check_point()
     # model = build_model(3)
     # print(model)
     # for name, param in model.named_parameters():
