@@ -132,7 +132,7 @@ class GalaxyDataset(Dataset):
 
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler=None,
-                num_epochs=10, device='cuda', patience=10, start_epoch=0, history=None):
+                num_epochs=10, device='cuda', patience=7, start_epoch=0, history=None):
     if history is None:
         history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 
