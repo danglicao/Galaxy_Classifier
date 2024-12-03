@@ -328,13 +328,13 @@ def load_checkpoint(path, model, optimizer, scheduler):
 
 def build_model(num_classes):
 
-    # model = models.resnet34(weights = 'IMAGENET1K_V1')
+    model = models.resnet50(weights = 'IMAGENET1K_V1')
     # model = models.resnet34(weights = None)
     # model = models.vit_b_32(weights = 'IMAGENET1K_V1')
     # model = models.resnet152(weights = 'IMAGENET1K_V2')
-    model = models.convnext_base(weights = 'IMAGENET1K_V1')
-    # for name, param in model.named_parameters():
-    #     param.requires_grad = False
+    # model = models.convnext_base(weights = 'IMAGENET1K_V1')
+    for name, param in model.named_parameters():
+        param.requires_grad = False
     # Transformer
     # for name, param in model.named_parameters():
     #     if "heads" not in name:
@@ -345,25 +345,25 @@ def build_model(num_classes):
     #         param.requires_grad = True
 
     # CNN
-    # num_ftrs = model.fc.in_features
-    # model.fc = nn.Linear(num_ftrs, num_classes)
-    # model.fc.requires_grad = True
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, num_classes)
+    model.fc.requires_grad = True
 
     # convnext
-    for param in model.features.parameters():
-      param.requires_grad = False
-
-    model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
-    model.classifier[2].requires_grad = True
-    for param in model.features[3].parameters():
-        param.requires_grad = True
+    # for param in model.features.parameters():
+    #   param.requires_grad = False
+    #
+    # model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
+    # model.classifier[2].requires_grad = True
+    # for param in model.features[3].parameters():
+    #     param.requires_grad = True
     return model
 
 
 def main():
     # 参数设置
     h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/train_data.h5'
-    batch_size = 32
+    batch_size = 256
     num_workers = 4
     num_epochs = 1000
     learning_rate = 1e-4
@@ -394,7 +394,8 @@ def main():
         optimizer,
         scheduler,
         num_epochs,
-        device
+        device,
+        patience=10,
     )
 
     model_save_path = 'D:/Ame508_final_data/result/new_store/galaxy_classifier.pth'
@@ -406,7 +407,7 @@ def main():
 
 def main_with_check_point():
     h5_file_path = 'D:/Ame508_final_data/galaxy_zoo/train_data.h5'
-    batch_size = 32
+    batch_size = 128
     num_workers = 4
     num_epochs = 1000
     learning_rate = 1e-4
@@ -432,7 +433,8 @@ def main_with_check_point():
         optimizer,
         scheduler,
         num_epochs,
-        device
+        device,
+        patience=7,
     )
 
     model_save_path = 'D:/Ame508_final_data/result/new_store/galaxy_classifier.pth'
@@ -445,8 +447,8 @@ def main_with_check_point():
 
 
 if __name__ == '__main__':
-    # main()
-    main_with_check_point()
+    main()
+    # main_with_check_point()
     # model = build_model(3)
     # print(model)
     # for name, param in model.named_parameters():

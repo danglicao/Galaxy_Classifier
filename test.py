@@ -112,29 +112,7 @@ def evaluate_model(model, test_loader, device, dir_path):
 
 
 def build_model(num_classes=3, model_name=None):
-    # model = models.convnext_base(weights='IMAGENET1K_V1')
-    # model = models.resnet152(weights = None)
-    # model = models.vit_l_16(weights = 'IMAGENET1K_SWAG_E2E_V1')
-    # model.heads.head = nn.Linear(model.heads.head.in_features, num_classes)
-    # for param in model.features.parameters():
-    #     param.requires_grad = False
-    # model.classifier[2] = torch.nn.Linear(model.classifier[2].in_features, num_classes)
-    # num_ftrs = model.fc.in_features
-    # model.fc = nn.Linear(num_ftrs, num_classes)
-    # model.fc.requires_grad = True
-    # num_patches = (input_size // model.patch_size) ** 2
-    # pos_embedding = model.encoder.pos_embedding
-    # if pos_embedding.shape[1] != num_patches + 1:
-    #     cls_token = pos_embedding[:, :1, :]  # 保留CLS token的嵌入
-    #     pos_tokens = pos_embedding[:, 1:, :]  # 提取patch嵌入
-    #     pos_tokens = nn.functional.interpolate(
-    #         pos_tokens.reshape(1, int(pos_tokens.shape[1] ** 0.5), int(pos_tokens.shape[1] ** 0.5),
-    #                            -1).permute(0, 3, 1, 2),
-    #         size = (input_size // model.patch_size, input_size // model.patch_size),
-    #         mode = 'bicubic',
-    #         align_corners = False
-    #     ).permute(0, 2, 3, 1).reshape(1, -1, pos_embedding.shape[-1])
-    #     model.encoder.pos_embedding = nn.Parameter(torch.cat([cls_token, pos_tokens], dim = 1))
+
     if model_name == 'convnext':
         model = models.convnext_base(weights = 'IMAGENET1K_V1')
         model.classifier[2] = nn.Linear(model.classifier[2].in_features, num_classes)
@@ -157,8 +135,6 @@ def build_model(num_classes=3, model_name=None):
 
     return model
 
-
-    return model
 
 
 def main():
